@@ -18,5 +18,19 @@ namespace JornadaMilhas.Integration.Test.API
 
             Assert.Equal(HttpStatusCode.OK, resultado.StatusCode);
         }
+
+        [Fact]
+        public async Task POST_Retorna_Login_Invalido()
+        {
+            var app = new JornadaMilhasWebApplicationFactory();
+            var user = new UserDTO { Email = "tester@email.com", Password = "ssd@" };
+
+            using var client = app.CreateClient();
+
+            var resultado = await client.PostAsJsonAsync("/auth-login", user);
+            
+            Assert.Equal(HttpStatusCode.BadRequest, resultado.StatusCode);
+            Assert.Equal(await resultado.Content.ReadAsStringAsync(), "\"Login inválido.\"");
+        }
     }
 }
