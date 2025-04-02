@@ -7,6 +7,8 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
+using JornadaMilhas.Integration.Test.API.DataBuilders;
+using Microsoft.EntityFrameworkCore;
 
 namespace JornadaMilhas.Integration.Test.API;
 
@@ -43,5 +45,91 @@ public class OfertaViagem_GET : IClassFixture<JornadaMilhasWebApplicationFactory
         Assert.Equal(ofertaExistente.Preco, response.Preco, 0.001);
         Assert.Equal(ofertaExistente.Rota.Origem, response.Rota.Origem);
         Assert.Equal(ofertaExistente.Rota.Destino, response.Rota.Destino);
+    }
+
+    [Fact]
+    public async Task Recupera_OfertasViagem_Na_Consulta_Paginada()
+    {
+        app.Context.Database.ExecuteSqlRaw("Delete from OfertasViagem");
+
+        var dataBuilder = new OfertaViagemDataBuilder();
+        var listaDeOfertas = dataBuilder.Generate(80);
+        app.Context.AddRange(listaDeOfertas);
+        app.Context.SaveChanges();
+
+        using var client = await app.GetClientWithAccessTokenAsync();
+
+        int pagina = 1;
+        int tamanhoPorPagina = 80;
+        
+        var response = await client.GetFromJsonAsync<ICollection<OfertaViagem>>($"/ofertas-viagem?pagina={pagina}&tamanhoPorPagina={tamanhoPorPagina}");
+        
+        Assert.True(response != null);
+        Assert.Equal(tamanhoPorPagina, response.Count());
+    }
+
+    [Fact]
+    public async Task Recupera_OfertasViagem_Na_Consulta_Ultima_Pagina()
+    {
+        app.Context.Database.ExecuteSqlRaw("Delete from OfertasViagem");
+
+        var dataBuilder = new OfertaViagemDataBuilder();
+        var listaDeOfertas = dataBuilder.Generate(80);
+        app.Context.AddRange(listaDeOfertas);
+        app.Context.SaveChanges();
+
+        using var client = await app.GetClientWithAccessTokenAsync();
+
+        int pagina = 4;
+        int tamanhoPorPagina = 25;
+
+        var response = await client.GetFromJsonAsync<ICollection<OfertaViagem>>($"/ofertas-viagem?pagina={pagina}&tamanhoPorPagina={tamanhoPorPagina}");
+
+        Assert.True(response != null);
+        Assert.Equal(5, response.Count());
+    }
+
+    [Fact]
+    public async Task Recupera_OfertasViagem_Na_Consulta_Com_Pagina_Inexistente()
+    {
+        app.Context.Database.ExecuteSqlRaw("Delete from OfertasViagem");
+
+        var dataBuilder = new OfertaViagemDataBuilder();
+        var listaDeOfertas = dataBuilder.Generate(80);
+        app.Context.AddRange(listaDeOfertas);
+        app.Context.SaveChanges();
+
+        using var client = await app.GetClientWithAccessTokenAsync();
+
+        int pagina = 5;
+        int tamanhoPorPagina = 25;
+
+        var response = await client.GetFromJsonAsync<ICollection<OfertaViagem>>($"/ofertas-viagem?pagina={pagina}&tamanhoPorPagina={tamanhoPorPagina}");
+
+        Assert.True(response != null);
+        Assert.Equal(0, response.Count());
+    }
+
+    [Fact]
+    public async Task Recupera_OfertasViagem_Na_Consulta_Com_Pagina_Com_Valor_Negativo()
+    {
+        app.Context.Database.ExecuteSqlRaw("Delete from OfertasViagem");
+
+        var dataBuilder = new OfertaViagemDataBuilder();
+        var listaDeOfertas = dataBuilder.Generate(80);
+        app.Context.AddRange(listaDeOfertas);
+        app.Context.SaveChanges();
+
+        using var client = await app.GetClientWithAccessTokenAsync();
+
+        int pagina = -5;
+        int tamanhoPorPagina = 25;
+
+        await Assert.ThrowsAsync<HttpRequestException>(async () =>
+        {
+            var response = await client.GetFromJsonAsync<ICollection<OfertaViagem>>
+                ($"/ofertas-viagem?pagina={pagina}&tamanhoPorPagina={tamanhoPorPagina}");
+        });
+        
     }
 }
