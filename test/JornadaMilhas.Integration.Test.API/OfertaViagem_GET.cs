@@ -24,18 +24,14 @@ public class OfertaViagem_GET : IClassFixture<JornadaMilhasWebApplicationFactory
     [Fact]
     public async Task Recupera_OfertaViagem_PorId()
     {
-        var ofertaExistente = app.Context.OfertasViagem.FirstOrDefault();
-        if (ofertaExistente is null)
+        var ofertaExistente = new OfertaViagem()
         {
-            ofertaExistente = new OfertaViagem()
-            {
-                Preco = 100,
-                Rota = new Rota("Origem", "Destino"),
-                Periodo = new Periodo(DateTime.Parse("2024-03-03"), DateTime.Parse("2024-03-06"))
-            };
-            app.Context.Add(ofertaExistente);
-            app.Context.SaveChanges();
-        }
+            Preco = 100,
+            Rota = new Rota("Origem", "Destino"),
+            Periodo = new Periodo(DateTime.Parse("2024-03-03"), DateTime.Parse("2024-03-06"))
+        };
+        app.Context.Add(ofertaExistente);
+        app.Context.SaveChanges();
 
         using var client = await app.GetClientWithAccessTokenAsync();
 
@@ -61,9 +57,9 @@ public class OfertaViagem_GET : IClassFixture<JornadaMilhasWebApplicationFactory
 
         int pagina = 1;
         int tamanhoPorPagina = 80;
-        
+
         var response = await client.GetFromJsonAsync<ICollection<OfertaViagem>>($"/ofertas-viagem?pagina={pagina}&tamanhoPorPagina={tamanhoPorPagina}");
-        
+
         Assert.True(response != null);
         Assert.Equal(tamanhoPorPagina, response.Count());
     }
@@ -130,6 +126,6 @@ public class OfertaViagem_GET : IClassFixture<JornadaMilhasWebApplicationFactory
             var response = await client.GetFromJsonAsync<ICollection<OfertaViagem>>
                 ($"/ofertas-viagem?pagina={pagina}&tamanhoPorPagina={tamanhoPorPagina}");
         });
-        
+
     }
 }

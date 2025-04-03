@@ -16,17 +16,13 @@ public class Rota_PUT : IClassFixture<JornadaMilhasWebApplicationFactory>
     [Fact]
     public async Task Atualizar_Rota_PorId()
     {
-        var rotaExistente = app.Context.Rota.FirstOrDefault();
-        if (rotaExistente is null)
+        var rotaExistente = new Rota()
         {
-            rotaExistente = new Rota()
-            {
-                Origem = "Rio de Janeiro",
-                Destino = "São Paulo"
-            };
-            app.Context.Add(rotaExistente);
-            app.Context.SaveChanges();
-        }
+            Origem = "Rio de Janeiro",
+            Destino = "São Paulo"
+        };
+        app.Context.Add(rotaExistente);
+        app.Context.SaveChanges();
 
         using var client = await app.GetClientWithAccessTokenAsync();
 

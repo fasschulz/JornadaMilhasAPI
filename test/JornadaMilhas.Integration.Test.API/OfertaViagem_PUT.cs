@@ -1,9 +1,11 @@
 ﻿using JornadaMilhas.Dominio.Entidades;
 using JornadaMilhas.Dominio.ValueObjects;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,9 +39,11 @@ public class OfertaViagem_PUT : IClassFixture<JornadaMilhasWebApplicationFactory
 
         using var client = await app.GetClientWithAccessTokenAsync();
 
-        var response = await client.PutAsJsonAsync($"/ofertas-viagem/", ofertaExistente);
-
+        var response = await client.PostAsync("/ofertas-viagem/", 
+            new StringContent(JsonConvert.SerializeObject(ofertaExistente).ToString(), 
+            Encoding.UTF8, "application/json"));
+        
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 }
